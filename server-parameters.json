@@ -1,0 +1,14 @@
+[
+	{
+		"ParameterKey": "EnvironmentName",
+		"ParameterValue": "UdacityProject"
+	},
+	{
+		"ParameterKey": "ProjectName",
+		"ParameterValue": "Web Application"
+	},
+	{
+		"ParameterKey": "S3BucketURL",
+		"ParameterValue": "s3://webapp-udacity/index.html"
+	}
+]
