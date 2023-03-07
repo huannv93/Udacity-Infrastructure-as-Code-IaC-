@@ -1,5 +1,6 @@
 Description: >
     HuanNV10 / Udacity 2023
+    This template deploys a Auto Scaling Group Web Application
 
 Parameters:
 
@@ -70,12 +71,18 @@ Resources:
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
+######
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: "-1"
         CidrIp: 0.0.0.0/0
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
+      #LaunchTemplateName: !Sub "${ProjectName}-Template"
       IamInstanceProfile: !Ref InstanceProfile
       UserData:
         Fn::Base64: !Sub |
@@ -92,6 +99,8 @@ Resources:
       SecurityGroups:
       - Ref: WebServerSecGroup
       InstanceType: t3.medium
+#########
+      KeyName: huannv10
       BlockDeviceMappings:
       - DeviceName: "/dev/sdk"
         Ebs:
@@ -107,7 +116,7 @@ Resources:
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
       MinSize: '2'
-      MaxSize: '2'
+      MaxSize: '4'
       TargetGroupARNs:
       - Ref: WebAppTargetGroup
       Tags:
@@ -125,7 +134,7 @@ Resources:
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
       MinSize: '2'
-      MaxSize: '2'
+      MaxSize: '4'
       TargetGroupARNs:
       - Ref: WebAppTargetGroup
       Tags:
@@ -176,6 +185,88 @@ Resources:
       VpcId: 
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
+  #Scaling out Policy
+  ScalingPolicyOut:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebAppGroupAZ1
+      ScalingAdjustment: '1'
+
+  #Alarm for scaling out
+  #CPUUtilization > 50 for 1 datapoints within 1 minute (60s) GreaterThanThreshold
+  CloudWatchAlarmOut:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      EvaluationPeriods: '1'
+      Statistic: Average
+      Threshold: '50'
+      AlarmDescription: Alarm set fo 50% of CPU utilization 
+      Period: '60'
+      AlarmActions:
+        - !Ref ScalingPolicyOut
+      Namespace: AWS/EC2
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value:
+            Ref: WebAppGroupAZ1
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: CPUUtilization
+  #Scaling in Policy
+  ScalingPolicyIn:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebAppGroupAZ1
+      ScalingAdjustment: '-2'
+
+  #Alarm for scaling in
+  #CPUUtilization < 40% for 1 datapoints within 1 minute (60s) LessThanThreshold
+  CloudWatchAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      EvaluationPeriods: '1'
+      Statistic: Average
+      Threshold: '40'
+      AlarmDescription: Alarm set fo 40% of CPU utilization 
+      Period: '60'
+      AlarmActions:
+        - !Ref ScalingPolicyIn
+      Namespace: AWS/EC2
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value:
+            Ref: WebAppGroupAZ1
+      ComparisonOperator: LessThanThreshold
+      MetricName: CPUUtilization
+  
+#Bastion Host
+  Bastion:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-006dcf34c09e50022
+      InstanceType: t2.micro
+      SubnetId:
+        Fn::ImportValue:
+          Fn::Sub: "${EnvironmentName}-PUB1-SN"
+      SecurityGroupIds: 
+        - !Ref WebServerSecGroup
+      KeyName: huannv10
+  ###Do not use PolicyType: "TargetTrackingScaling" 
+  # ScalingPolicyAZ2:
+  #     Type: "AWS::AutoScaling::ScalingPolicy"
+  #     Properties:
+  #       AutoScalingGroupName: !Ref WebAppGroupAZ2
+  #       PolicyType: "TargetTrackingScaling"
+  #       TargetTrackingConfiguration:
+  #         PredefinedMetricSpecification:
+  #           PredefinedMetricType: "ASGAverageCPUUtilization"
+  #         TargetValue: 50.0
+  #         DisableScaleIn: false
+      
+
+
+
 
 
 Outputs:
