@@ -71,7 +71,6 @@ Resources:
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
-######
       - IpProtocol: tcp
         FromPort: 22
         ToPort: 22
@@ -82,7 +81,6 @@ Resources:
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      #LaunchTemplateName: !Sub "${ProjectName}-Template"
       IamInstanceProfile: !Ref InstanceProfile
       UserData:
         Fn::Base64: !Sub |
@@ -99,8 +97,6 @@ Resources:
       SecurityGroups:
       - Ref: WebServerSecGroup
       InstanceType: t3.medium
-#########
-      KeyName: huannv10
       BlockDeviceMappings:
       - DeviceName: "/dev/sdk"
         Ebs:
@@ -185,7 +181,9 @@ Resources:
       VpcId: 
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
-  #Scaling out Policy
+
+
+  #Scaling out Policy for WebAppGroupAZ1
   ScalingPolicyOut:
     Type: 'AWS::AutoScaling::ScalingPolicy'
     Properties:
@@ -193,7 +191,7 @@ Resources:
       AutoScalingGroupName: !Ref WebAppGroupAZ1
       ScalingAdjustment: '1'
 
-  #Alarm for scaling out
+  #Alarm for scaling out WebAppGroupAZ1
   #CPUUtilization > 50 for 1 datapoints within 1 minute (60s) GreaterThanThreshold
   CloudWatchAlarmOut:
     Type: 'AWS::CloudWatch::Alarm'
@@ -212,7 +210,7 @@ Resources:
             Ref: WebAppGroupAZ1
       ComparisonOperator: GreaterThanThreshold
       MetricName: CPUUtilization
-  #Scaling in Policy
+  #Scaling in Policy WebAppGroupAZ1
   ScalingPolicyIn:
     Type: 'AWS::AutoScaling::ScalingPolicy'
     Properties:
@@ -220,7 +218,7 @@ Resources:
       AutoScalingGroupName: !Ref WebAppGroupAZ1
       ScalingAdjustment: '-2'
 
-  #Alarm for scaling in
+  #Alarm for scaling in WebAppGroupAZ1
   #CPUUtilization < 40% for 1 datapoints within 1 minute (60s) LessThanThreshold
   CloudWatchAlarm:
     Type: 'AWS::CloudWatch::Alarm'
@@ -252,26 +250,16 @@ Resources:
       SecurityGroupIds: 
         - !Ref WebServerSecGroup
       KeyName: huannv10
-  ###Do not use PolicyType: "TargetTrackingScaling" 
-  # ScalingPolicyAZ2:
-  #     Type: "AWS::AutoScaling::ScalingPolicy"
-  #     Properties:
-  #       AutoScalingGroupName: !Ref WebAppGroupAZ2
-  #       PolicyType: "TargetTrackingScaling"
-  #       TargetTrackingConfiguration:
-  #         PredefinedMetricSpecification:
-  #           PredefinedMetricType: "ASGAverageCPUUtilization"
-  #         TargetValue: 50.0
-  #         DisableScaleIn: false
       
-
-
-
-
 
 Outputs:
     WebAppLB: 
         Description: DNS of Web App Load Balancer.
         Value: !Sub "http://${WebAppLB.DNSName}"
+    Bastion:
+        Description: IP of Bastion Host.
+        Value: !GetAtt Bastion.PublicIp
+       
+    
 
   
