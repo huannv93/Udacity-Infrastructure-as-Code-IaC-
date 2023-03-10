@@ -14,7 +14,7 @@ There will be two parts to this project:
 ### How to run the the code?
 ```bash
 # Ensure that the AWS CLI is configured before runniing the command below
-# Check the region in the script file
+# Check the region and profile in the script file
 
 # Create the network infrastructure
 ./create.sh myNetwork network.yml network-parameters.json
