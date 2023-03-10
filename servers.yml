@@ -71,10 +71,6 @@ Resources:
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
-        CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: "-1"
         CidrIp: 0.0.0.0/0
@@ -197,61 +193,6 @@ Resources:
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
 
-
-  #Scaling out Policy for WebAppGroupAZ1
-  ScalingPolicyOut:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebAppGroupAZ1
-      ScalingAdjustment: '1'
-
-  #Alarm for scaling out WebAppGroupAZ1
-  #CPUUtilization > 50 for 1 datapoints within 1 minute (60s) GreaterThanThreshold
-  CloudWatchAlarmOut:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      EvaluationPeriods: '1'
-      Statistic: Average
-      Threshold: '50'
-      AlarmDescription: Alarm set fo 50% of CPU utilization 
-      Period: '60'
-      AlarmActions:
-        - !Ref ScalingPolicyOut
-      Namespace: AWS/EC2
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value:
-            Ref: WebAppGroupAZ1
-      ComparisonOperator: GreaterThanThreshold
-      MetricName: CPUUtilization
-  #Scaling in Policy WebAppGroupAZ1
-  ScalingPolicyIn:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebAppGroupAZ1
-      ScalingAdjustment: '-2'
-
-  #Alarm for scaling in WebAppGroupAZ1
-  #CPUUtilization < 40% for 1 datapoints within 1 minute (60s) LessThanThreshold
-  CloudWatchAlarm:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      EvaluationPeriods: '1'
-      Statistic: Average
-      Threshold: '40'
-      AlarmDescription: Alarm set fo 40% of CPU utilization 
-      Period: '60'
-      AlarmActions:
-        - !Ref ScalingPolicyIn
-      Namespace: AWS/EC2
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value:
-            Ref: WebAppGroupAZ1
-      ComparisonOperator: LessThanThreshold
-      MetricName: CPUUtilization
   
 #Bastion Host
   Bastion:
