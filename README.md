@@ -16,11 +16,11 @@ There will be two parts to this project:
 # Ensure that the AWS CLI is configured before runniing the command below
 # Check the region and profile AWS CLI in the script file
 
-# Create the network infrastructure
+# Create the network infrastructure first!
 ./create.sh myNetwork network.yml network-parameters.json
 
 # Create servers
-./create.sh myServers network.yml network-parameters.json
+./create.sh myServers servers.yml server-parameters.json
 
 #update stack:
 ./update.sh mySecStack servers.yml server-parameters.json
