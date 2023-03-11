@@ -25,3 +25,6 @@ There will be two parts to this project:
 #update stack:
 ./update.sh mySecStack servers.yml server-parameters.json
 ```
+
+Provide a URL to verify your work is running properly, it should be a page that says “it works! Udagram, Udacity”:
+http://huann-webap-zuc4eee2huby-1468418975.us-east-1.elb.amazonaws.com/
